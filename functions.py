@@ -77,35 +77,48 @@ def get_text_and_links(driver, pg_num=20):
     links = []
     texts = []
     headlines = []
+    k = 0
+    count_elements = 0
 
-    for i in range(pg_num):
-        for i in range(pg_num):
+    for s in range(pg_num):
+        try:
             elements = WebDriverWait(driver, 4).until(
                 EC.presence_of_all_elements_located((By.XPATH, "//div[@class='MjjYud']")))
-            time.sleep(2)
-            for i in range(len(elements)):
-                try:
-                    text = elements[i].text
-                    if text != '':
-                        texts.append(text)
-                    else:
-                        texts.append(np.nan)
-                except NoSuchElementException:
-                    text = np.nan
+        except:
+            print(f"No elemments with xpath found")
+        time.sleep(2)
 
-                try:
-                    headline = elements[i].find_element(
-                        By.XPATH, ".//div[@class='kb0PBd A9Y9g']").text
-                except NoSuchElementException:
-                    headline = np.nan
-                headlines.append(headline)
-
-                try:
-                    link = elements[i].find_element(
-                        By.XPATH, ".//a[@jsname='UWckNb']").get_attribute("href")
-                except NoSuchElementException:
-                    link = np.nan
-                links.append(link)
+        for i in range(len(elements)):
+            try:
+                text = elements[i].text
+                if text != '':
+                    texts.append(text)
+                else:
+                    texts.append(np.nan)
+            except NoSuchElementException:
+                text = np.nan
+            try:
+                headline = elements[i].find_element(
+                    By.XPATH, ".//div[@class='kb0PBd A9Y9g']").text
+            except NoSuchElementException:
+                headline = np.nan
+            headlines.append(headline)
+            try:
+                link = elements[i].find_element(
+                    By.XPATH, ".//a[@jsname='UWckNb']").get_attribute("href")
+            except NoSuchElementException:
+                link = np.nan
+            links.append(link)
+        k = s + 1
+        count_elements = count_elements + len(elements)
+        print(f"page {k} done with {len(elements)
+                                    } elements found. Total elements: {count_elements}")
+        try:
+            driver.find_element(By.XPATH, '//*[@id="pnnext"]').click()
+            time.sleep(1)
+        except:
+            print("end of pages")
+            break
 
     texts = pd.Series(texts, name='texts')
     links = pd.Series(links, name='links')
@@ -115,47 +128,18 @@ def get_text_and_links(driver, pg_num=20):
     return texts, links, headlines
 
 
-def get_text_and_links2(driver, pg_num=20):
-    links, texts = [], []
-    count_elements = 0
-
-    for i in range(pg_num):
-        elements = WebDriverWait(driver, 4).until(
-            EC.presence_of_all_elements_located((By.XPATH, "//div[@class='MjjYud']")))
-        time.sleep(2)
-        for i in range(len(elements)):
-            try:
-                text = elements[i].text
-            except NoSuchElementException:
-                if text != '':
-                    texts.append(text)
-                else:
-                    texts.append(np.nan)
-                text = np.nan
-            texts.append(text)
-
-            try:
-                link = elements[i].find_element(
-                    By.XPATH, ".//a[@jsname='UWckNb']").get_attribute("href")
-            except NoSuchElementException:
-                link = np.nan
-            links.append(link)
-    texts = pd.Series(texts, name='texts')
-    links = pd.Series(links, name='links')
-
-    return texts, links
-
-
 def date_transform(text):
-
-    date = text.str.split('—').str[0].str.replace(',', '')
-
-    if "ago" in date:
-        days_ago = int(text.split()[0])
-        return datetime.now() - timedelta(days=days_ago)
-
-    elif "minute" in date or 'hours' in date:
-        return datetime.now().date()
-
+    if type(text) == float:
+        return np.nan
     else:
-        return pd.to_datetime(text)  # , format='%b %d %Y', errors='coerce')
+        date = text.split('—')[0].replace(',', '')
+        if "minutes ago" in date or 'hours ago' in date:
+            return str(datetime.now().date()).split(' ')[0]
+        elif "days ago" in date:
+            days_ago = int(text.split()[0])
+            return str(datetime.now() - timedelta(days=days_ago)).split(' ')[0]
+        elif 'day ago' in date:
+            return str(datetime.now().date()).split(' ')[0]
+        else:
+            # , format='%b %d %Y', errors='coerce')
+            return str(pd.to_datetime(date)).split(' ')[0]
