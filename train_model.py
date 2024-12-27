@@ -117,7 +117,7 @@ plt.show()
 
 # - Análise de importância das variáveis (feature importance)
 # Exibindo a importância das variáveis do modelo Random Forest
-importances = pipeline.named_steps['clf'].feature_importances_
+importances = best_model.named_steps['clf'].feature_importances_
 features = X.columns
 
 # Organizando as variáveis por importância
