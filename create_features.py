@@ -1,3 +1,4 @@
+#%%
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from textblob import TextBlob
@@ -120,3 +121,5 @@ print(f'\033[92m\n--- now run "python train_model.py" to train the model \033[0m
 #
 
 
+
+# %%

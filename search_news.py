@@ -1,4 +1,4 @@
-
+#%%
 from functions import (call_driver,
                        send_focus_key,
                        get_text_and_links2,
@@ -39,3 +39,5 @@ df0.to_csv(f'news_df_{today}.csv')
 
 print(f'\033[92m\n--- now run "python create_features.py" to prepare the dataset \033[0m')
 
+
+# %%

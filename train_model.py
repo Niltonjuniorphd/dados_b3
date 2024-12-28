@@ -1,4 +1,4 @@
-
+#%%
 import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
@@ -155,3 +155,5 @@ plt.show()
 print('--- End of program ---')
 
 
+
+# %%
