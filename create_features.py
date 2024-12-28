@@ -80,7 +80,7 @@ print(f'\033[92m---  creating features done... \033[0m\n')
 print('---------')
 time.sleep(2)
 
-print('starting merge df_features with $dolar data')
+print('starting merge df_features with $dollar data')
 dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')
 time.sleep(2)  
 print(f'\033[92m\n--- loading dataset 2024_ExchangeRateFile_20241227_1.csv done... \033[0m\n')

@@ -75,10 +75,10 @@ python run.py
 #### Please note that just executing the Script **'run.py'** will perform all the steps below.
 
 ### **Step 1 : Scrap and Persist Data**
-The script **`search_news.py`** performs the following
+The script **`search_news.py`** performs the following:
 1. ***__ETL__***: The script **`search_news.py`** fetches news from **Google News** using Selenium. The **`focus_key`** variable defines the search keywords.
 2. **Process**: Once the site responds, the script scrapes news articles, collecting **headlines**, **links** and **text**. It processes at least **30 pages**.
-3. **Output**: Generates a CSV file named **`news_df_aaa_mm_dd.csv`** to store the data.
+3. **Output**: Generates a CSV file named **`news_df_yyyy_mm_dd.csv`** to store the data.
 
 - The image below displays the expected dataframe output:
 <div align="center">
@@ -88,10 +88,17 @@ The script **`search_news.py`** performs the following
 
 ### **Step 2: Create Features and Persist as CSV**
 The script **`create_features.py`** performs the following:
-1. **Sentiment Analysis**: Reads data from **`news_df_yyyy-mm-dd.csv`** and calculates sentiment scores using **TextBlob** and **VADER** tools. Articles are classified as **positive**, **negative**, or **neutral**.
+1. **Sentiment Analysis**: Reads data from **`news_df_yyyy-mm-dd.csv`** created in the spep 1 and calculates sentiment scores using **TextBlob** and **VADER** tools. Articles are classified as **positive**, **negative**, or **neutral**.
 2. **Metric Calculation**: Computes word counts, word frequency, and other metrics.
 3. **Financial Data Integration**: Loads financial data from **`2024_ExchangeRateFile_20241227_1.csv`**  (downloaded from [B3's official site](https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/consultas/boletim-diario/historico-de-taxas-de-cambio-resolucao-bcb-n-120/)) and merges it with news sentiment data based on the **date** column. (Perhaps the file name should be changed to match the downloaded file)
-4. **Output**: Creates a merged DataFrame with features created and saves it as **`news_df_features_yyyy-mm-dd.csv`**. 
+
+```bash	
+# Please pay attention in this detail:
+# the file name in the create_features.py should be changed to match the downloaded file
+
+dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')
+```
+4. **Output**: Creates a merged DataFrame with features and saves it as **`news_df_features_yyyy-mm-dd.csv`**. 
 
 - The image below displays the expected dataframe output:
 <div align="center">
