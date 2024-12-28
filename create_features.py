@@ -9,18 +9,18 @@ import time
 
 
 today = pd.Timestamp.today().date()
-print(f'Starting create_features.py at {today}')
+print(f'\nStarting create_features.py at {today}')
 
 try:
     df0 = pd.read_csv(f'news_df_{today}.csv', index_col=0)
 except:
     print(f'file not found!')
 
-print(f'\033[92m\n-----loading data news_df_{today} done...-----\033[0m\n')
+print(f'\033[92m--- loading data news_df_{today} done... \033[0m\n')
 time.sleep(2)
 
 print('---------\n')
-print('initiating transformations to create features')
+print('initiating transformations to create features:')
 
 df = df0.copy()
 # 1. Contagem de caracteres
@@ -68,22 +68,21 @@ df = pd.concat([df, word_count_df], axis=1)
 print(df)
 '''
 
-# %%
 df_features = df.iloc[:,4:]
 df_features = df_features[df_features['dates_b'] != 'NaT']
 df_features = df_features.drop(columns=['sentiment_scores'])
 df_features = df_features.sort_values(by='dates_b', ascending=False)
 df_features
 
-# %%
-print(f'\033[92m\n-----creating features done...-----\033[0m\n')
-print('---------\n')
+
+print(f'\033[92m---  creating features done... \033[0m\n')
+print('---------')
 time.sleep(2)
 
 print('starting merge df_features with $dolar data')
 dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')
 time.sleep(2)  
-print(f'\033[92m\n-----loading data 2024_ExchangeRateFile_20241227_1.csv done...-----\033[0m\n')
+print(f'\033[92m\n--- loading dataset 2024_ExchangeRateFile_20241227_1.csv done... \033[0m\n')
 
 try:
     df_merged = pd.merge(df_features, dolar, how='left', left_on='dates_b', right_on='RptDt')
@@ -93,41 +92,31 @@ try:
 except:
     print(f'some thing went wrong...')
 
-print(f'\033[92m\n-----merging data done...-----\033[0m\n')
+print(f'\033[92m\n--- merging data done... \033[0m\n')
 
-print('---------\n')
+print('---------')
 time.sleep(2)
 
 today = pd.Timestamp.today().date()
 df_merged.to_csv(f'news_df_features_{today}.csv')
-print(f'saving data as  news_df_features_{today}.csv')
+print(f'saving dataset as: news_df_features_{today}.csv')
+print(f'\033[92m\n--- now run "python train_model.py" to train the model \033[0m')
 
 
-plt.scatter(df_merged['polarity'], df_merged['PricVal'])
 
-#%%
-plt.scatter(df_merged['subjectivity'], df_merged['PricVal'])
 
-# %%
-plt.scatter(pd.to_datetime(df_merged['dates_b']), df_merged['PricVal'])
-plt.plot(pd.to_datetime(df_merged['dates_b']), df_merged['PricVal'])
-plt.xticks(rotation=90)
+#
+#plt.scatter(df_merged['polarity'], df_merged['PricVal'])
+#plt.scatter(df_merged['subjectivity'], df_merged['PricVal'])
+#plt.scatter(pd.to_datetime(df_merged['dates_b']), df_merged['PricVal'])
+#plt.plot(pd.to_datetime(df_merged['dates_b']), df_merged['PricVal'])
+#plt.xticks(rotation=90)
+#plt.scatter(df_merged['avg_word_length'], df_merged['PricVal'])
+#plt.scatter(df_merged['neg'], df_merged['PricVal'])
+#plt.scatter(df_merged['pos'], df_merged['PricVal'])
+#plt.scatter(df_merged['neu'], df_merged['PricVal'])
+#plt.scatter(df_merged['compound'], df_merged['PricVal'])
+#
+#
 
-# %%
-plt.scatter(df_merged['avg_word_length'], df_merged['PricVal'])
 
-# %%
-plt.scatter(df_merged['neg'], df_merged['PricVal'])
-
-# %%
-plt.scatter(df_merged['pos'], df_merged['PricVal'])
-
-# %%
-plt.scatter(df_merged['neu'], df_merged['PricVal'])
-
-# %%
-plt.scatter(df_merged['compound'], df_merged['PricVal'])
-
-# %%
-
-# %%

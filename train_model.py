@@ -42,10 +42,11 @@ param_grid = {
 }
 
 grid_search = GridSearchCV(estimator=pipeline,
-                           param_grid=param_grid, cv=3,
+                           param_grid=param_grid,
+                           cv=3,
                            scoring='neg_root_mean_squared_error',
                            n_jobs=-1,
-                           verbose=3)
+                           verbose=2)
 
 grid_search.fit(X_train, y_train)
 
@@ -57,6 +58,11 @@ best_model = grid_search.best_estimator_
 
 time.sleep(2)
 print('\npredicting...')
+time.sleep(2)
+print('predicting done...\n')
+time.sleep(2)
+print('calculate metrics and creating plots...')
+
 # Predições com o melhor modelo
 y_pred = best_model.predict(X_test)
 y_pred_train = best_model.predict(X_train)
@@ -83,7 +89,8 @@ print(f"MAE (test): {MAE:.3f}")
 print(f"MAE (train): {MAE_train:.3f}")
 print(f"R² (test): {r2_test:.3f}")
 print(f"R² (train): {r2_train:.3f}")
-
+print('\nmetrics successfully calculated...\n')
+print('plots will rise in a window. Close the window to see the next plot.')
 # - Visualizações para análise de erros
 # Resíduos
 residuals = y_test - y_pred
@@ -144,5 +151,7 @@ plt.title('Importância das Variáveis')
 plt.xlabel('Importância')
 plt.ylabel('Variáveis')
 plt.show()
+
+print('--- End of program ---')
 
 

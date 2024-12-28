@@ -1,15 +1,18 @@
 
-from functions import (call_driver, send_focus_key,
-                       get_text_and_links, date_transform, get_text_and_links2, converter_data)
+from functions import (call_driver,
+                       send_focus_key,
+                       get_text_and_links2,
+                       converter_data)
 import pandas as pd
-from datetime import datetime, timedelta
-import numpy as np
+
+#from datetime import datetime, timedelta
+#import numpy as np
 
 # instantiate the drive with predefined option
 driver = call_driver()
 
 # the words to focus on the serach in google
-focus_key = 'Lula economia dolar'
+focus_key = 'Lula diz que dolar'
 
 # send the focus_key to drive search box
 send_focus_key(driver, focus_key=focus_key)
@@ -34,4 +37,5 @@ df0
 today = pd.Timestamp.today().date()
 df0.to_csv(f'news_df_{today}.csv')
 
+print(f'\033[92m\n--- now run "python create_features.py" to prepare the dataset \033[0m')
 
