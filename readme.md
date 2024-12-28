@@ -46,8 +46,8 @@ python run.py
 
 ## Notes
 - Ensure you have Python 3.8 or higher installed on your system before proceeding.
-- The script will create a CSV files `root` directory.
-- The external file from the B3 website must be stored in the `root` directory (see next section).
+- The script will create CSV files on `root: dados_b3` directory.
+- The external financial data file from the B3 website must be stored in the `root: dados_b3` directory before executions (see next section).
 ---
 
 ## How it Works
