@@ -1,4 +1,4 @@
-#%%
+
 import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
@@ -9,20 +9,26 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error
+import time
 
+today = pd.Timestamp.today().date()
+print(f'loading dataset news_df_features_{today}.csv')
+try:
+    df0 = pd.read_csv(f'news_df_features_{today}.csv', index_col=0)
+except:
+    print(f'file not found!')
+print(f'\033[92m\n-----loading dataset news_df_features__{today} done...-----\033[0m\n')
+time.sleep(2)
 
-
-#%%
-df0 = pd.read_csv('news_df_features.csv', index_col=0)
-df0
-
-#%%
+print('spliting train/test dataset...')
 X = df0.drop(columns=['dates_b', 'PricVal'], axis=1)
 
 y = df0['PricVal']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
 
+time.sleep(2)
+print('creating pipeline and runing GridSearchCV...')
 pipeline = Pipeline([
     ('clf', RandomForestRegressor(random_state=42))
 ])
@@ -35,15 +41,22 @@ param_grid = {
     'clf__criterion': ['squared_error', 'poisson']
 }
 
-grid_search = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=3, scoring='neg_root_mean_squared_error', n_jobs=-1)
+grid_search = GridSearchCV(estimator=pipeline,
+                           param_grid=param_grid, cv=3,
+                           scoring='neg_root_mean_squared_error',
+                           n_jobs=-1,
+                           verbose=3)
 
 grid_search.fit(X_train, y_train)
 
-print(f"Melhores parâmetros: {grid_search.best_params_}")
-print(f"Melhor desempenho (RMSE): {-grid_search.best_score_:.3f}")
+print('\033[92m\n-----  GridSearchCV done...  -----\033[0m\n')
+print(f"Best Param: {grid_search.best_params_}")
+print(f"Best performance (RMSE): {-grid_search.best_score_:.3f}")
 
 best_model = grid_search.best_estimator_
 
+time.sleep(2)
+print('\npredicting...')
 # Predições com o melhor modelo
 y_pred = best_model.predict(X_test)
 y_pred_train = best_model.predict(X_train)
@@ -64,14 +77,14 @@ r2_test = r2_score(y_test, y_pred)
 r2_train = r2_score(y_train, y_pred_train)
 
 # Exibindo os resultados
-print(f"RMSE (Teste): {RMSE:.3f}")
-print(f"RMSE (Treinamento): {RMSE_train:.3f}")
-print(f"MAE (Teste): {MAE:.3f}")
-print(f"MAE (Treinamento): {MAE_train:.3f}")
-print(f"R² (Teste): {r2_test:.3f}")
-print(f"R² (Treinamento): {r2_train:.3f}")
+print(f"RMSE (test): {RMSE:.3f}")
+print(f"RMSE (train): {RMSE_train:.3f}")
+print(f"MAE (test): {MAE:.3f}")
+print(f"MAE (train): {MAE_train:.3f}")
+print(f"R² (test): {r2_test:.3f}")
+print(f"R² (train): {r2_train:.3f}")
 
-#%% - Visualizações para análise de erros
+# - Visualizações para análise de erros
 # Resíduos
 residuals = y_test - y_pred
 residuals_train = y_train - y_pred_train
@@ -132,4 +145,4 @@ plt.xlabel('Importância')
 plt.ylabel('Variáveis')
 plt.show()
 
-# %%
+

@@ -1,16 +1,26 @@
-#%%
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from textblob import TextBlob
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk import download
 import matplotlib.pyplot as plt
+import time
 
-#%%
-df0 = pd.read_csv('news_df_30_pgs_ok.csv', index_col=0)
-df0
 
-# %%
+
+today = pd.Timestamp.today().date()
+print(f'Starting create_features.py at {today}')
+
+try:
+    df0 = pd.read_csv(f'news_df_{today}.csv', index_col=0)
+except:
+    print(f'file not found!')
+
+print(f'\033[92m\n-----loading data news_df_{today} done...-----\033[0m\n')
+time.sleep(2)
+
+print('---------\n')
+print('initiating transformations to create features')
 
 df = df0.copy()
 # 1. Contagem de caracteres
@@ -66,19 +76,33 @@ df_features = df_features.sort_values(by='dates_b', ascending=False)
 df_features
 
 # %%
+print(f'\033[92m\n-----creating features done...-----\033[0m\n')
+print('---------\n')
+time.sleep(2)
 
-dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')  
-dolar
+print('starting merge df_features with $dolar data')
+dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')
+time.sleep(2)  
+print(f'\033[92m\n-----loading data 2024_ExchangeRateFile_20241227_1.csv done...-----\033[0m\n')
 
-# %%
+try:
+    df_merged = pd.merge(df_features, dolar, how='left', left_on='dates_b', right_on='RptDt')
+    df_merged = df_merged[df_merged['EcncIndDesc'] == 'Indicadores gerais']
+    df_merged['PricVal'] = df_merged['PricVal'].str.replace(',', '.').astype(float)
+    df_merged = df_merged.drop(columns=['Asst',	'TckrSymb', 'EcncIndDesc'])
+except:
+    print(f'some thing went wrong...')
 
-df_merged = pd.merge(df_features, dolar, how='left', left_on='dates_b', right_on='RptDt')
-df_merged = df_merged[df_merged['EcncIndDesc'] == 'Indicadores gerais']
-df_merged['PricVal'] = df_merged['PricVal'].str.replace(',', '.').astype(float)
-df_merged = df_merged.drop(columns=['Asst',	'TckrSymb', 'EcncIndDesc'])
-df_merged
+print(f'\033[92m\n-----merging data done...-----\033[0m\n')
 
-# %%
+print('---------\n')
+time.sleep(2)
+
+today = pd.Timestamp.today().date()
+df_merged.to_csv(f'news_df_features_{today}.csv')
+print(f'saving data as  news_df_features_{today}.csv')
+
+
 plt.scatter(df_merged['polarity'], df_merged['PricVal'])
 
 #%%
@@ -105,5 +129,5 @@ plt.scatter(df_merged['neu'], df_merged['PricVal'])
 plt.scatter(df_merged['compound'], df_merged['PricVal'])
 
 # %%
-df_merged.to_csv('news_df_features.csv')
+
 # %%

@@ -1,5 +1,4 @@
 
-# %%
 from functions import (call_driver, send_focus_key,
                        get_text_and_links, date_transform, get_text_and_links2, converter_data)
 import pandas as pd
@@ -32,8 +31,7 @@ df0['dates_b'] = [str(x).split(' ')[0] for x in df0['dates_b']]
 
 df0
 
-# %%
-df0.to_csv('news_df.csv')
+today = pd.Timestamp.today().date()
+df0.to_csv(f'news_df_{today}.csv')
 
 
-# %%
