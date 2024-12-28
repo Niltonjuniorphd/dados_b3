@@ -1,4 +1,4 @@
 *.csv
 .env
-__pycache__
-inspections.py
+/__pycache__
+/inspections.py
