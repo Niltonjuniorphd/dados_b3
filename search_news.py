@@ -12,7 +12,7 @@ import pandas as pd
 driver = call_driver()
 
 # the words to focus on the serach in google
-focus_key = 'Lula diz que dolar'
+focus_key = 'Dollar rise inflation brazil news'
 
 # send the focus_key to drive search box
 send_focus_key(driver, focus_key=focus_key)
@@ -35,7 +35,7 @@ df0['dates_b'] = [str(x).split(' ')[0] for x in df0['dates_b']]
 df0
 
 today = pd.Timestamp.today().date()
-df0.to_csv(f'news_df_{today}.csv')
+df0.to_csv(f'news_df_{today}_{focus_key}.csv')
 
 print(f'\033[92m\n--- now run "python create_features.py" to prepare the dataset \033[0m')
 

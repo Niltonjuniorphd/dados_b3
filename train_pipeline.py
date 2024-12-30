@@ -13,12 +13,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+#%%
+dataset_path = 'en_News'
+
 
 #%%
 today = pd.Timestamp.today().date()
 print(f'loading dataset news_df_features_{today}.csv')
 try:
-    df0 = pd.read_csv(f'news_df_{today}.csv', index_col=0)
+    #df0 = pd.read_csv(f'news_df_{today}.csv', index_col=0)
+    df0 = pd.read_csv(f'{dataset_path}.csv', index_col=0)
     dollar = pd.read_csv('2024_ExchangeRateFile_20241230_1.csv', encoding='ISO-8859-1', sep=';')
 except:
     print(f'file not found!')
@@ -169,6 +173,26 @@ plt.title('Previsões vs Real - Treinamento')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Previstos')
 plt.show()
+
+#%%
+# - Análise de importância das variáveis (feature importance)
+# Exibindo a importância das variáveis do modelo Random Forest
+importances = pipeline.named_steps['clf'].feature_importances_
+features = pipeline.named_steps['clf'].feature_names_in_
+
+# Organizando as variáveis por importância
+indices = importances.argsort()
+
+# Plotando
+plt.figure(figsize=(10, 6))
+plt.barh(range(len(features)), importances[indices], align='center')
+plt.yticks(range(len(features)), [features[i] for i in indices])
+plt.title('Importância das Variáveis')
+plt.xlabel('Importância')
+plt.ylabel('Variáveis')
+plt.show()
+
+print('--- End of program ---')
 
 # %%
 outoftime = pd.read_csv(f'news_df_30_pgs_ok.csv', index_col=0)
