@@ -50,7 +50,8 @@ Activate the virtual environment:
 ### 3. Install Required Libraries
 Install the required Python libraries using the `requirements.txt` file:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt --no-cache-dir
+
 ```
 
 ### 4. Runnig:
@@ -112,7 +113,7 @@ dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encodin
 ### **Step 3: Train and Test the Model**
 The script **`train_model.py`** performs the following:
 1. **Data Preparation**: Reads data from **`news_df_features_yyyy-mm-dd.csv`** and splits it into **training** and **testing** sets.
-2. **Model Training**: Uses **GridSearchCV** to optimize hyperparameters for a **Random Forest Classifier**. The model is trained on the training set.
+2. **Model Training**: Uses **GridSearchCV** to optimize hyperparameters for a **Random Forest Regressor**. The model is trained on the training set.
 3. **Evaluation**: Calculates and prints the **accuracy** on the testing set. Statistics and **plots** are displayed in sequential windows. (Close one plot window to view the next.)
 
 

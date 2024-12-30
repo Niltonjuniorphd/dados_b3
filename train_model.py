@@ -46,7 +46,7 @@ grid_search = GridSearchCV(estimator=pipeline,
                            cv=3,
                            scoring='neg_root_mean_squared_error',
                            n_jobs=-1,
-                           verbose=2)
+                           verbose=1)
 
 grid_search.fit(X_train, y_train)
 
