@@ -6,6 +6,7 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk import download
 import matplotlib.pyplot as plt
 import time
+from datetime import datetime
 
 
 
@@ -13,17 +14,19 @@ today = pd.Timestamp.today().date()
 print(f'\nStarting create_features.py at {today}')
 
 try:
-    df0 = pd.read_csv(f'news_df_{today}.csv', index_col=0)
+    df0 = pd.read_csv(f'./news_dataset/News_dataset.csv')
 except:
     print(f'file not found!')
 
-print(f'\033[92m--- loading data news_df_{today} done... \033[0m\n')
+print(f'\033[92m--- loading data News_dataset.csv done... \033[0m\n')
 time.sleep(2)
 
 print('---------\n')
 print('initiating transformations to create features:')
 
 df = df0.copy()
+
+df = df.drop_duplicates()
 # 1. Contagem de caracteres
 df['char_count'] = df['headlines'].apply(len)
 
@@ -80,16 +83,21 @@ print(f'\033[92m---  creating features done... \033[0m\n')
 print('---------')
 time.sleep(2)
 
+
+# link for dollar exchange in brazilian real: https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/consultas/boletim-diario/historico-de-taxas-de-cambio-resolucao-bcb-n-120/
 print('starting merge df_features with $dollar data')
-dolar = pd.read_csv('2024_ExchangeRateFile_20241227_1.csv', index_col=0, encoding='ISO-8859-1', sep=';')
+dolar = pd.read_csv('./dollar_exchange_brazil_data/brazilian_dolar_real_exchange_data_BC_01-09-2025.csv', encoding='utf-8', sep=',')
 time.sleep(2)  
 print(f'\033[92m\n--- loading dataset 2024_ExchangeRateFile_20241227_1.csv done... \033[0m\n')
 
+dolar['date'] = pd.to_datetime(dolar['dataHoraCotacao']).dt.strftime('%Y-%m-%d')
+
+
 try:
-    df_merged = pd.merge(df_features, dolar, how='left', left_on='dates_b', right_on='RptDt')
-    df_merged = df_merged[df_merged['EcncIndDesc'] == 'Indicadores gerais']
-    df_merged['PricVal'] = df_merged['PricVal'].str.replace(',', '.').astype(float)
-    df_merged = df_merged.drop(columns=['Asst',	'TckrSymb', 'EcncIndDesc'])
+    df_merged = pd.merge(df_features, dolar, how='left', left_on='dates_b', right_on='date')
+    df_merged['cotacaoCompra'] = df_merged['cotacaoCompra'].str.replace(',', '.').astype(float)
+    df_merged['cotacaoVenda'] = df_merged['cotacaoVenda'].str.replace(',', '.').astype(float)
+    df_merged = df_merged.dropna()
 except:
     print(f'some thing went wrong...')
 

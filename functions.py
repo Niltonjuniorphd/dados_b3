@@ -75,62 +75,7 @@ def send_focus_key(driver, focus_key):
         print(f"Failed to send focus key: {e}")
 
 
-def get_text_and_links(driver, pg_num=20):
-    links = []
-    texts = []
-    headlines = []
-    k = 0
-    count_elements = 0
-
-    for s in range(pg_num):
-        try:
-            elements = WebDriverWait(driver, 4).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//div[@class='MjjYud']")))
-        except:
-            print(f"No elemments with xpath found")
-        time.sleep(2)
-
-        for i in range(len(elements)):
-            try:
-                text = elements[i].text
-                if text != '':
-                    texts.append(text)
-                else:
-                    texts.append(np.nan)
-            except NoSuchElementException:
-                text = np.nan
-            try:
-                headline = elements[i].find_element(
-                    By.XPATH, ".//div[@class='kb0PBd A9Y9g']").text
-            except NoSuchElementException:
-                headline = np.nan
-            headlines.append(headline)
-            try:
-                link = elements[i].find_element(
-                    By.XPATH, ".//a[@jsname='UWckNb']").get_attribute("href")
-            except NoSuchElementException:
-                link = np.nan
-            links.append(link)
-        k = s + 1
-        count_elements = count_elements + len(elements)
-        print(f"page {k} done with {len(elements)
-                                    } elements found. Total elements: {count_elements}")
-        try:
-            driver.find_element(By.XPATH, '//*[@id="pnnext"]').click()
-            time.sleep(1)
-        except:
-            print("end of pages")
-            break
-
-    texts = pd.Series(texts, name='texts')
-    links = pd.Series(links, name='links')
-    headlines = pd.Series(headlines, name='headlines')
-    print('\033[92mlinks and texts successfully acquired... \033[0m\n')
-
-    return texts, links, headlines
-
-
-def get_text_and_links2(driver, pg_num=1):
+def get_text_and_links2(driver, pg_num=3):
     links = []
     texts = []
     headlines = []
@@ -144,6 +89,7 @@ def get_text_and_links2(driver, pg_num=1):
                 EC.presence_of_all_elements_located((By.XPATH, "//div[@class='SoaBEf']")))
         except:
             print(f"No elemments with xpath found")
+            pass
         time.sleep(2)
 
         for i in range(len(elements)):
@@ -154,29 +100,43 @@ def get_text_and_links2(driver, pg_num=1):
                     texts.append(text)
                 else:
                     texts.append(np.nan)
-            except NoSuchElementException:
-                text = np.nan
+            except:
+                texts.append(np.nan)
+                pass
 
             try:
                 headline = elements[i].find_element(
                     By.XPATH, ".//div[@class='n0jPhd ynAwRc MBeuO nDgy9d']").text
-            except NoSuchElementException:
-                headline = np.nan
-            headlines.append(headline)
+                if headline != '':
+                    headlines.append(headline)
+                else:
+                    headlines.append(np.nan)
+            except:
+                headlines.append(headline)
+                pass
 
             try:
                 link = elements[i].find_element(
                     By.XPATH, ".//a[@jsname='YKoRaf']").get_attribute("href")
-            except NoSuchElementException:
-                link = np.nan
-            links.append(link)
+                if link != '':
+                    links.append(link)
+                else:
+                    links.append(np.nan)
+            except:
+                links.append(np.nan)
+                pass
 
             try:
                 date = elements[i].find_element(
                     By.XPATH, ".//div[@class='OSrXXb rbYSKb LfVVr']").text
-            except NoSuchElementException:
-                date = np.nan
-            dates.append(date)
+                if date != '':
+                    dates.append(date)
+                else:
+                    dates.append(np.nan)
+            except:
+                dates.append(np.nan)
+                pass
+
 
         k = s + 1
         count_elements = count_elements + len(elements)
