@@ -2,6 +2,14 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from sklearn.base import BaseEstimator, TransformerMixin
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from textblob import TextBlob
+import pandas as pd
+import string
 from textblob import TextBlob
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk import download
@@ -13,13 +21,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import GridSearchCV
 
+
 #from datetime import datetime
 
-
-
-
 #%%
-dataset_path = './news_dataset/News_dataset.csv'
+dataset_path = './news_dataset/News_dataset_lula_say.csv'
 print(f'loading news_dataset from {dataset_path}')
 try:
     df0 = pd.read_csv(f'{dataset_path}')
@@ -28,14 +34,19 @@ try:
 except:
     print(f'fail loading files')
 
+# for nyt news dataset:
+#df0 = df0.drop(columns=['Unnamed: 0', 'source', 'web_url'])
+#df0['dates_b'] = pd.to_datetime(df0['pub_date']).dt.strftime('%Y-%m-%d')
+#df0 = df0.drop(columns=['pub_date'])
 
-#%%
+# for google search dataset:
+df0 = df0.drop(columns=['links', 'dates'])
+
+
 def merge_dollar(dataset, dollar):
     # Convert date column and format as required
     dollar['date'] = pd.to_datetime(dollar['dataHoraCotacao']).dt.strftime('%Y-%m-%d')
     dollar = dollar.drop(columns=['cotacaoVenda', 'dataHoraCotacao'])
-    dataset = dataset.drop(columns=['links', 'dates'])  # Avoid errors if columns don't exist
-    
     df_merged = None  # Initialize df_merged to avoid UnboundLocalError
     
     try:
@@ -54,12 +65,6 @@ def merge_dollar(dataset, dollar):
     else:
         return None
 
-
-df_merged = merge_dollar(df0, dollar)
-df_merged
-
-
-#%%
 class CreateFeatures(BaseEstimator, TransformerMixin):
     def __init__(self, text_columns):
         self.text_columns = text_columns
@@ -78,7 +83,7 @@ class CreateFeatures(BaseEstimator, TransformerMixin):
             df[f'word_count_{text_column}'] = df[text_column].apply(lambda x: len(x.split()))
             df[f'unique_word_count_{text_column}'] = df[text_column].apply(lambda x: len(set(x.split())))
             df[f'avg_word_length_{text_column}'] = df[text_column].apply(lambda x: sum(len(word) for word in x.split()) / len(x.split()))
-            df[f'punctuation_count_{text_column}'] = df[text_column].apply(lambda x: sum(1 for char in x if char in "!?.,;:"))
+            #df[f'punctuation_count_{text_column}'] = df[text_column].apply(lambda x: sum(1 for char in x if char in "!?.,;:"))
             df[f'polarity_{text_column}'] = df[text_column].apply(lambda x: TextBlob(x).sentiment.polarity)
             df[f'subjectivity_{text_column}'] = df[text_column].apply(lambda x: TextBlob(x).sentiment.subjectivity)
 
@@ -89,50 +94,56 @@ class CreateFeatures(BaseEstimator, TransformerMixin):
             df[f'pos_{text_column}'] = sentiment_scores.apply(lambda x: x['pos'])
             df[f'compound_{text_column}'] = sentiment_scores.apply(lambda x: x['compound'])
 
-            # Remover linhas com datas inválidas, se necessário
-            #if 'dates_b' in df.columns:
-            #    df = df[df['dates_b'] != 'NaT']
-
         return df.iloc[:, 4:]  # Retorna apenas as colunas geradas
 
 
+def train_test(df_merged):
+
+    #df_merged_f = df_merged[df_merged['cotacaoCompra'] >= 4.5].copy()
+
+    X = df_merged.drop(columns=['cotacaoCompra'], axis=1)
+    y = df_merged['cotacaoCompra']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    return X_train, X_test, y_train, y_test 
 
 
+def train_test_diff(df_merged):
+
+    #df_merged_f = df_merged[df_merged['cotacaoCompra'] >= 4.5].copy()
+    df_merged_f = df_merged
+    df_merged_f.loc[:,'diff'] = df_merged_f['cotacaoCompra'].diff()
+    df_merged_f = df_merged_f.dropna()
+    X = df_merged_f.drop(columns=['cotacaoCompra', 'diff'], axis=1)
+    y = df_merged_f['diff']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    return X_train, X_test, y_train, y_test 
 
 
 # %%
-X = df_merged.drop(columns=['cotacaoCompra'], axis=1)
+df_merged = merge_dollar(df0, dollar)
+df_merged
 
-y = df_merged['cotacaoCompra']
+X_train, X_test, y_train, y_test = train_test(df_merged)
+#X_train, X_test, y_train, y_test = train_test_diff(df_merged)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
 
-
-# %%
 pipeline = Pipeline([
-    ('features', CreateFeatures(text_columns=['texts', 'headlines'])),
+    ('features', CreateFeatures(text_columns=X_train.columns)),
     ('clf', RandomForestRegressor(random_state=42))
 ])
 
 pipeline.fit(X_train, y_train)
 
-# %%
 # Predições com o melhor modelo
 y_pred = pipeline.predict(X_test)
 y_pred_train = pipeline.predict(X_train)
 
 RMSE = (sum((y_pred - y_test)**2)/len(y_test)**0.5)
-print(f'RMSE_test: {RMSE}')
-
 RMSE_train = (sum((y_pred_train - y_train)**2)/len(y_train)**0.5)
-print(f'RMSE_train: {RMSE_train}')
-
-# - Avaliação do desempenho
-# Cálculo do RMSE já foi feito, mas podemos também calcular o MAE (Erro Absoluto Médio)
 MAE = mean_absolute_error(y_test, y_pred)
 MAE_train = mean_absolute_error(y_train, y_pred_train)
-
-# Cálculo do R² (coeficiente de determinação) para o modelo
 r2_test = r2_score(y_test, y_pred)
 r2_train = r2_score(y_train, y_pred_train)
 
@@ -150,43 +161,49 @@ print('plots will rise in a window. Close the window to see the next plot.')
 residuals = y_test - y_pred
 residuals_train = y_train - y_pred_train
 
-# Plotando os resíduos
-plt.figure(figsize=(14, 6))
+plt.figure(figsize=(14, 10))
 
-# Resíduos no conjunto de teste
-plt.subplot(1, 2, 1)
+plt.subplot(3, 2, 1)
+sns.histplot(y_test, kde=True, color='blue', bins=30)
+plt.title('Distribuição dos valores - Test')
+plt.xlabel('valores')
+plt.ylabel('Frequência')
+
+plt.subplot(3, 2, 2)
+sns.histplot(y_train, kde=True, color='blue', bins=30)
+plt.title('Distribuição dos valores - Train')
+plt.xlabel('valores')
+plt.ylabel('')
+
+
+plt.subplot(3, 2, 3)
 sns.histplot(residuals, kde=True, color='blue', bins=30)
-plt.title('Distribuição dos Resíduos - Teste')
+plt.title('Distribuição dos Resíduos - Test')
 plt.xlabel('Resíduo')
 plt.ylabel('Frequência')
 
-# Resíduos no conjunto de treinamento
-plt.subplot(1, 2, 2)
+plt.subplot(3, 2, 4)
 sns.histplot(residuals_train, kde=True, color='red', bins=30)
-plt.title('Distribuição dos Resíduos - Treinamento')
+plt.title('Distribuição dos Resíduos - Train')
 plt.xlabel('Resíduo')
-plt.ylabel('Frequência')
+plt.ylabel('')
 
-plt.tight_layout()
-plt.show()
-
-# - Gráficos de dispersão: valores previstos vs valores reais
-# Teste
-plt.figure(figsize=(8, 6))
+plt.subplot(3, 2, 5) 
 plt.scatter(y_test, y_pred, color='blue', alpha=0.7)
 plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
 plt.title('Previsões vs Real - Teste')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Previstos')
-plt.show()
 
 # Treinamento
-plt.figure(figsize=(8, 6))
+plt.subplot(3, 2, 6) 
 plt.scatter(y_train, y_pred_train, color='red', alpha=0.7)
 plt.plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='blue', linestyle='--')
 plt.title('Previsões vs Real - Treinamento')
 plt.xlabel('Valores Reais')
-plt.ylabel('Valores Previstos')
+plt.ylabel('')
+
+plt.tight_layout()
 plt.show()
 
 # - Análise de importância das variáveis (feature importance)
@@ -259,50 +276,56 @@ print('plots will rise in a window. Close the window to see the next plot.')
 residuals = y_test - y_pred
 residuals_train = y_train - y_pred_train
 
-# Plotando os resíduos
-plt.figure(figsize=(14, 6))
+plt.figure(figsize=(14, 10))
 
-# Resíduos no conjunto de teste
-plt.subplot(1, 2, 1)
+plt.subplot(3, 2, 1)
+sns.histplot(y_test, kde=True, color='blue', bins=30)
+plt.title('Distribuição dos valores - Test')
+plt.xlabel('valores')
+plt.ylabel('Frequência')
+
+plt.subplot(3, 2, 2)
+sns.histplot(y_train, kde=True, color='blue', bins=30)
+plt.title('Distribuição dos valores - Train')
+plt.xlabel('valores')
+plt.ylabel('')
+
+
+plt.subplot(3, 2, 3)
 sns.histplot(residuals, kde=True, color='blue', bins=30)
-plt.title('Distribuição dos Resíduos - Teste')
+plt.title('Distribuição dos Resíduos - Test')
 plt.xlabel('Resíduo')
 plt.ylabel('Frequência')
 
-# Resíduos no conjunto de treinamento
-plt.subplot(1, 2, 2)
+plt.subplot(3, 2, 4)
 sns.histplot(residuals_train, kde=True, color='red', bins=30)
-plt.title('Distribuição dos Resíduos - Treinamento')
+plt.title('Distribuição dos Resíduos - Train')
 plt.xlabel('Resíduo')
-plt.ylabel('Frequência')
+plt.ylabel('')
 
-plt.tight_layout()
-plt.show()
-
-# - Gráficos de dispersão: valores previstos vs valores reais
-# Teste
-plt.figure(figsize=(8, 6))
+plt.subplot(3, 2, 5) 
 plt.scatter(y_test, y_pred, color='blue', alpha=0.7)
 plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
 plt.title('Previsões vs Real - Teste')
 plt.xlabel('Valores Reais')
 plt.ylabel('Valores Previstos')
-plt.show()
 
 # Treinamento
-plt.figure(figsize=(8, 6))
+plt.subplot(3, 2, 6) 
 plt.scatter(y_train, y_pred_train, color='red', alpha=0.7)
 plt.plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='blue', linestyle='--')
 plt.title('Previsões vs Real - Treinamento')
 plt.xlabel('Valores Reais')
-plt.ylabel('Valores Previstos')
+plt.ylabel('')
+
+plt.tight_layout()
 plt.show()
 
 # - Análise de importância das variáveis (feature importance)
 # Exibindo a importância das variáveis do modelo Random Forest
+importances = pipeline.named_steps['clf'].feature_importances_
+features = pipeline.named_steps['clf'].feature_names_in_
 
-importances = best_model.named_steps['clf'].feature_importances_
-features = best_model.named_steps['clf'].feature_names_in_
 # Organizando as variáveis por importância
 indices = importances.argsort()
 

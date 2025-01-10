@@ -89,54 +89,56 @@ def get_text_and_links2(driver, pg_num=3):
                 EC.presence_of_all_elements_located((By.XPATH, "//div[@class='SoaBEf']")))
         except:
             print(f"No elemments with xpath found")
+            elements = ''
             pass
         time.sleep(2)
-
         for i in range(len(elements)):
-            try:
-                text = elements[i].find_element(
-                    By.XPATH, ".//div[@class='GI74Re nDgy9d']").text
-                if text != '':
-                    texts.append(text)
-                else:
+            if elements != '':
+                try:
+                    text = elements[i].find_element(
+                        By.XPATH, ".//div[@class='GI74Re nDgy9d']").text
+                    if text != '':
+                        texts.append(text)
+                    else:
+                        texts.append(np.nan)
+                except:
                     texts.append(np.nan)
-            except:
-                texts.append(np.nan)
-                pass
+                    pass
 
-            try:
-                headline = elements[i].find_element(
-                    By.XPATH, ".//div[@class='n0jPhd ynAwRc MBeuO nDgy9d']").text
-                if headline != '':
+                try:
+                    headline = elements[i].find_element(
+                        By.XPATH, ".//div[@class='n0jPhd ynAwRc MBeuO nDgy9d']").text
+                    if headline != '':
+                        headlines.append(headline)
+                    else:
+                        headlines.append(np.nan)
+                except:
                     headlines.append(headline)
-                else:
-                    headlines.append(np.nan)
-            except:
-                headlines.append(headline)
-                pass
+                    pass
 
-            try:
-                link = elements[i].find_element(
-                    By.XPATH, ".//a[@jsname='YKoRaf']").get_attribute("href")
-                if link != '':
-                    links.append(link)
-                else:
+                try:
+                    link = elements[i].find_element(
+                        By.XPATH, ".//a[@jsname='YKoRaf']").get_attribute("href")
+                    if link != '':
+                        links.append(link)
+                    else:
+                        links.append(np.nan)
+                except:
                     links.append(np.nan)
-            except:
-                links.append(np.nan)
-                pass
+                    pass
 
-            try:
-                date = elements[i].find_element(
-                    By.XPATH, ".//div[@class='OSrXXb rbYSKb LfVVr']").text
-                if date != '':
-                    dates.append(date)
-                else:
+                try:
+                    date = elements[i].find_element(
+                        By.XPATH, ".//div[@class='OSrXXb rbYSKb LfVVr']").text
+                    if date != '':
+                        dates.append(date)
+                    else:
+                        dates.append(np.nan)
+                except:
                     dates.append(np.nan)
-            except:
-                dates.append(np.nan)
+                    pass
+            else:
                 pass
-
 
         k = s + 1
         count_elements = count_elements + len(elements)
