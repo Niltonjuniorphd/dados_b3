@@ -20,29 +20,17 @@ driver = call_driver()
 # 'brazilian central bank dollar rate news'
 #
 phrases = [
-    "Central Bank of Brazil Lula says news",
-    "Volatile Brazilian currency Lula says dollar news",
-    "Exchange rate fluctuation Lula says news",
-    "Brazilian real volatility Lula says dollar exchange news",
-    "Fluctuating exchange Lula says news",
-    "Brazil's currency Lula says news",
-    "Brazilian real dollar Lula says news",
-    "Brazil's exchange rate Lula says news",
-    "Dollar exchange rate Lula says in Brazil news",
-    "Brazilian Lula says real fluctuations central bank news",
-    "Brazil's currency and dollar Lula says news",
-    "Exchange rate dynamics Lula says in Brazil's market news",
-    "Brazilian economy Lula says exchange rate dollar trends news",
-    "Real-dollar volatility in Brazil central bank news",
-    "Brazil's monetary policy Lula says news",
-    "Floating exchange Lula says Brazil news",
-    "Volatile dollar Lula says economy news",
-    "Central Bank of Lula says analysis news",
-    "Brazilian real Lula says rate news",
-    "Brazil's currency market volatility Lula says dollar news"
+    "Volatile exchange Lula says dollar",
+    "Exchange fluctuation Lula says",
+    "real volatility Lula says",
+    "Brazilian real dollar Lula says ",
+    "Brazil exchange rate Lula says ",
+    "Dollar rate Lula says",    
 ]
 
-
+phrases2 = [
+    "Lula says dollar",
+]
 #focus_key = 'brazilian central bank dollar rate news'
 
 # send the focus_key to drive search box
@@ -69,7 +57,7 @@ for focus_key in phrases:
     df0
 
     today = pd.Timestamp.today().date()
-    df0.to_csv(f'./lula_say/news_df_{today}_{focus_key}.csv')
+    df0.to_csv(f'./lula_say/news_df_short_{today}_{focus_key}.csv', encoding='utf-8')
 
     print(f'\033[92m\n--- now run "python create_features.py" to prepare the dataset \033[0m')
 

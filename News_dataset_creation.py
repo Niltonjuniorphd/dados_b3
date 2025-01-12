@@ -14,7 +14,7 @@ for file in file_names:
     df = pd.read_csv(f'{folder_path}/{file}', index_col=0, encoding='ISO-8859-1', sep=',')
     df0 = pd.concat([df0, df])
 
-df0.to_csv('./news_dataset/News_dataset_lula_say.csv', index=False, encoding='utf-8')
+df0.to_csv('./news_dataset/News_dataset_lula_say.csv', index=False, encoding='ISO-8859-1')
 
 
 # %%

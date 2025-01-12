@@ -12,6 +12,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import dateparser
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import mean_absolute_error, r2_score
 
 
 def call_driver():
@@ -187,3 +190,90 @@ def converter_data(data):
     else:
         # Usa datetime.strptime para datas no formato "dd de mmm. de yyyy"
         return datetime.strptime(data, "%d de %b. de %Y")
+
+
+def metrics_plot(y_test, y_pred, y_train, y_pred_train, pipeline):
+    RMSE = (sum((y_pred - y_test)**2)/len(y_test)**0.5)
+    RMSE_train = (sum((y_pred_train - y_train)**2)/len(y_train)**0.5)
+    MAE = mean_absolute_error(y_test, y_pred)
+    MAE_train = mean_absolute_error(y_train, y_pred_train)
+    r2_test = r2_score(y_test, y_pred)
+    r2_train = r2_score(y_train, y_pred_train)
+
+    # Exibindo os resultados
+    print(f"RMSE (test): {RMSE:.3f}")
+    print(f"RMSE (train): {RMSE_train:.3f}")
+    print(f"MAE (test): {MAE:.3f}")
+    print(f"MAE (train): {MAE_train:.3f}")
+    print(f"R² (test): {r2_test:.3f}")
+    print(f"R² (train): {r2_train:.3f}")
+    print('\nmetrics successfully calculated...\n')
+    print('plots will rise in a window. Close the window to see the next plot.')
+    # - Visualizações para análise de erros
+    # Resíduos
+    residuals = y_test - y_pred
+    residuals_train = y_train - y_pred_train
+
+    plt.figure(figsize=(14, 10))
+
+    plt.subplot(3, 2, 1)
+    sns.histplot(y_test, kde=True, color='blue', bins=30)
+    plt.title('Distribuição dos valores - Test')
+    plt.xlabel('valores')
+    plt.ylabel('Frequência')
+
+    plt.subplot(3, 2, 2)
+    sns.histplot(y_train, kde=True, color='red', bins=30)
+    plt.title('Distribuição dos valores - Train')
+    plt.xlabel('valores')
+    plt.ylabel('')
+
+    plt.subplot(3, 2, 3)
+    sns.histplot(residuals, kde=True, color='blue', bins=30)
+    plt.title('Distribuição dos Resíduos - Test')
+    plt.xlabel('Resíduo')
+    plt.ylabel('Frequência')
+
+    plt.subplot(3, 2, 4)
+    sns.histplot(residuals_train, kde=True, color='red', bins=30)
+    plt.title('Distribuição dos Resíduos - Train')
+    plt.xlabel('Resíduo')
+    plt.ylabel('')
+
+    plt.subplot(3, 2, 5)
+    plt.scatter(y_test, y_pred, color='blue', alpha=0.7)
+    plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+    plt.title('Previsões vs Real - Teste')
+    plt.xlabel('Valores Reais')
+    plt.ylabel('Valores Previstos')
+
+    # Treinamento
+    plt.subplot(3, 2, 6)
+    plt.scatter(y_train, y_pred_train, color='red', alpha=0.7)
+    plt.plot([min(y_train), max(y_train)], [min(y_train), max(y_train)], color='red', linestyle='--')
+    plt.title('Previsões vs Real - Treinamento')
+    plt.xlabel('Valores Reais')
+    plt.ylabel('')
+
+    plt.tight_layout()
+    plt.show()
+
+    # - Análise de importância das variáveis (feature importance)
+    # Exibindo a importância das variáveis do modelo Random Forest
+    importances = pipeline.named_steps['clf'].feature_importances_
+    features = pipeline.named_steps['clf'].feature_names_in_
+
+    # Organizando as variáveis por importância
+    indices = importances.argsort()
+
+    # Plotando
+    plt.figure(figsize=(10, 10))
+    plt.barh(range(len(features)), importances[indices], align='center')
+    plt.yticks(range(len(features)), [features[i] for i in indices])
+    plt.title('Importância das Variáveis')
+    plt.xlabel('Importância')
+    plt.ylabel('Variáveis')
+    plt.tight_layout()
+    plt.show()
+
+    print('--- End of program ---')
