@@ -14,12 +14,17 @@ from textblob import TextBlob
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk import download
 download('vader_lexicon')
+download('stopwords')
+download('punkt_tab')
+download('wordnet')
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.metrics import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LinearRegression
+from xgboost import XGBRegressor
 
 
 #from datetime import datetime
@@ -40,7 +45,7 @@ except:
 #df0 = df0.drop(columns=['pub_date'])
 
 # for google search dataset:
-df0 = df0.drop(columns=['links', 'dates'])
+df0 = df0.drop(columns=['links', 'dates', 'headlines'])
 
 
 def merge_dollar(dataset, dollar):
@@ -79,10 +84,10 @@ class CreateFeatures(BaseEstimator, TransformerMixin):
         
         for text_column in self.text_columns:
             # Criação de features baseadas no texto
-            df[f'char_count_{text_column}'] = df[text_column].apply(len)
-            df[f'word_count_{text_column}'] = df[text_column].apply(lambda x: len(x.split()))
-            df[f'unique_word_count_{text_column}'] = df[text_column].apply(lambda x: len(set(x.split())))
-            df[f'avg_word_length_{text_column}'] = df[text_column].apply(lambda x: sum(len(word) for word in x.split()) / len(x.split()))
+            #df[f'char_count_{text_column}'] = df[text_column].apply(len)
+            #df[f'word_count_{text_column}'] = df[text_column].apply(lambda x: len(x.split()))
+            #df[f'unique_word_count_{text_column}'] = df[text_column].apply(lambda x: len(set(x.split())))
+            #df[f'avg_word_length_{text_column}'] = df[text_column].apply(lambda x: sum(len(word) for word in x.split()) / len(x.split()))
             #df[f'punctuation_count_{text_column}'] = df[text_column].apply(lambda x: sum(1 for char in x if char in "!?.,;:"))
             df[f'polarity_{text_column}'] = df[text_column].apply(lambda x: TextBlob(x).sentiment.polarity)
             df[f'subjectivity_{text_column}'] = df[text_column].apply(lambda x: TextBlob(x).sentiment.subjectivity)
@@ -97,13 +102,61 @@ class CreateFeatures(BaseEstimator, TransformerMixin):
         return df.iloc[:, 4:]  # Retorna apenas as colunas geradas
 
 
+class CreateFeatures2(BaseEstimator, TransformerMixin):
+    def __init__(self, text_columns):
+        self.text_columns = text_columns
+        self.sia = SentimentIntensityAnalyzer()
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words("english"))
+        self.punctuation = set(string.punctuation)
+
+    def preprocess_text(self, text):
+        if not isinstance(text, str):
+            return ""
+        tokens = word_tokenize(text.lower())  # Tokeniza e converte para minúsculas
+        tokens = [word for word in tokens if word not in self.stop_words and word not in self.punctuation]  # Remove stopwords e pontuação
+        lemmatized_text = " ".join(self.lemmatizer.lemmatize(word) for word in tokens)  # Lematiza cada palavra
+        return lemmatized_text
+
+    def fit(self, X, y=None):
+        # Nenhuma operação de ajuste necessária
+        return self
+
+    def transform(self, X):
+        df = X.copy()
+
+        for text_column in self.text_columns:
+            # Pré-processamento do texto (lemmatização e remoção de ruídos)
+            df[f'cleaned_{text_column}'] = df[text_column].apply(self.preprocess_text)
+            
+            # Criação de features baseadas no texto
+            df[f'char_count_{text_column}'] = df[f'cleaned_{text_column}'].apply(len)
+            df[f'word_count_{text_column}'] = df[f'cleaned_{text_column}'].apply(lambda x: len(x.split()))
+            df[f'unique_word_count_{text_column}'] = df[f'cleaned_{text_column}'].apply(lambda x: len(set(x.split())))
+            df[f'avg_word_length_{text_column}'] = df[f'cleaned_{text_column}'].apply(
+                lambda x: sum(len(word) for word in x.split()) / len(x.split()) if x.split() else 0
+            )
+            df[f'polarity_{text_column}'] = df[f'cleaned_{text_column}'].apply(lambda x: TextBlob(x).sentiment.polarity)
+            df[f'subjectivity_{text_column}'] = df[f'cleaned_{text_column}'].apply(lambda x: TextBlob(x).sentiment.subjectivity)
+
+            # Análise de sentimento com SentimentIntensityAnalyzer
+            sentiment_scores = df[f'cleaned_{text_column}'].apply(lambda x: self.sia.polarity_scores(x))
+            df[f'neg_{text_column}'] = sentiment_scores.apply(lambda x: x['neg'])
+            df[f'neu_{text_column}'] = sentiment_scores.apply(lambda x: x['neu'])
+            df[f'pos_{text_column}'] = sentiment_scores.apply(lambda x: x['pos'])
+            df[f'compound_{text_column}'] = sentiment_scores.apply(lambda x: x['compound'])
+
+        # Retorna apenas as colunas geradas, excluindo a coluna intermediária 'cleaned_*'
+        feature_columns = [col for col in df.columns if col not in self.text_columns and not col.startswith("cleaned_")]
+        return df[feature_columns]
+
 def train_test(df_merged):
 
-    #df_merged_f = df_merged[df_merged['cotacaoCompra'] >= 4.5].copy()
+    df_merged_f = df_merged[df_merged['cotacaoCompra'] >= 4.5].copy()
 
-    X = df_merged.drop(columns=['cotacaoCompra'], axis=1)
-    y = df_merged['cotacaoCompra']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    X = df_merged_f.drop(columns=['cotacaoCompra'], axis=1)
+    y = df_merged_f['cotacaoCompra']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
     
     return X_train, X_test, y_train, y_test 
 
@@ -123,6 +176,7 @@ def train_test_diff(df_merged):
 
 # %%
 df_merged = merge_dollar(df0, dollar)
+df_merged['cotacaoCompra'] = df_merged['cotacaoCompra'].round(2)
 df_merged
 
 X_train, X_test, y_train, y_test = train_test(df_merged)
@@ -130,8 +184,10 @@ X_train, X_test, y_train, y_test = train_test(df_merged)
 
 
 pipeline = Pipeline([
-    ('features', CreateFeatures(text_columns=X_train.columns)),
+    ('features', CreateFeatures2(text_columns=X_train.columns)),
     ('clf', RandomForestRegressor(random_state=42))
+    #('clf', XGBRegressor(objective="reg:squarederror", random_state=42))
+    #('clf', LinearRegression())
 ])
 
 pipeline.fit(X_train, y_train)
@@ -238,7 +294,7 @@ grid_search = GridSearchCV(estimator=pipeline,
                            param_grid=param_grid,
                            cv=3,
                            scoring='neg_root_mean_squared_error',
-                           n_jobs=-1,
+                           n_jobs=1,
                            verbose=2)
 
 grid_search.fit(X_train, y_train)
