@@ -185,7 +185,7 @@ def train_test_diff(df_merged):
 
 
 # %%
-dataset_path = './news_dataset/News_dataset_lula_say.csv'
+dataset_path = './news_dataset/News_dataset_lula_say_short_b.csv'
 print(f'loading news_dataset from {dataset_path}')
 try:
     df = pd.read_csv(f'{dataset_path}').reset_index(drop=True)

@@ -29,12 +29,12 @@ phrases = [
 ]
 
 phrases2 = [
-    "Lula says dollar",
+    "brazilian volatile currency news",
 ]
 #focus_key = 'brazilian central bank dollar rate news'
 
 # send the focus_key to drive search box
-for focus_key in phrases:
+for focus_key in phrases2:
     send_focus_key(driver, focus_key=focus_key)
 
     headlines, texts, links, dates = get_text_and_links2(driver, pg_num=100)
