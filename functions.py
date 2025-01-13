@@ -208,7 +208,6 @@ def metrics_plot(y_test, y_pred, y_train, y_pred_train, pipeline):
     print(f"R² (test): {r2_test:.3f}")
     print(f"R² (train): {r2_train:.3f}")
     print('\nmetrics successfully calculated...\n')
-    print('plots will rise in a window. Close the window to see the next plot.')
     # - Visualizações para análise de erros
     # Resíduos
     residuals = y_test - y_pred
